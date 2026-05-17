@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Assessment Akhir Sumatif - Koding dan KA</title>
+    <!-- Menggunakan Tailwind CSS untuk Tampilan Modern & Responsif -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen w-screen overflow-hidden">
+
+    <!-- HALAMAN SETUP / LOGIN -->
+    <div id="setup-page" class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-gray-100 text-center">
+            <div class="mb-6">
+                <h1 class="text-4xl font-extrabold text-blue-600 mb-3 tracking-wide">Welcome</h1>
+                <h2 class="text-2xl font-bold text-gray-800 mb-1">Assessment Akhir Sumatif</h2>
+                <h3 class="text-lg font-semibold text-gray-600 mb-1">Semester Genap</h3>
+                <p class="text-md text-gray-500 font-medium bg-gray-100 py-2 mt-3 rounded-lg">Informatika</p>
+            </div>
+            
+            <div class="space-y-4">
+                
+                <!-- INPUT TOKEN UJIAN -->
+                <div class="text-left">
+                    <label class="block text-sm font-bold text-gray-700 mb-1">Token Ujian</label>
+                    <input type="text" id="exam-token" placeholder="Masukkan Token..." autocomplete="off"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-0 focus:border-blue-500 outline-none transition-all uppercase font-bold text-center tracking-widest text-lg">
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md text-left">
+                    <p class="text-xs text-yellow-700 font-semibold mb-2">Perhatian:</p>
+                    <ul class="text-xs text-yellow-700 list-disc pl-4 space-y-1">
+                        <li>Dilarang menekan tombol Ganti Akun.</li>
+                        <li>Sistem Anti-Curang aktif. Dilarang keluar tab!</li>
+                        <li>Ujian memiliki <b>Batas Waktu</b>.</li>
+                        <li>Tekan <b>Kirim/Submit</b> sebelum waktu habis.</li>
+                    </ul>
+                </div>
+
+                <button onclick="startExam()" class="w-full bg-blue-600 text-white font-bold py-4 px-4 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-all shadow-lg text-lg">
+                    Mulai Ujian
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HALAMAN UJIAN UTAMA -->
+    <div id="exam-page" class="hidden h-screen w-screen flex flex-col bg-white">
+        <!-- Header Ujian -->
+        <div id="header-bar" class="bg-red-600 text-white px-4 py-3 flex justify-between items-center shadow-md z-10 transition-colors duration-300">
+            <div class="flex flex-col w-1/3">
+                <span id="header-title" class="font-bold text-xs md:text-sm truncate">Koding dan KA</span>
+                <span id="header-subtitle" class="text-[10px] text-red-200 truncate">Anti-Curang Aktif</span>
+            </div>
+            
+            <!-- INDIKATOR WAKTU DAN PERINGATAN -->
+            <div class="flex items-center justify-center w-1/3">
+                <span id="timer-display" class="bg-white text-blue-700 px-3 py-1 rounded-md text-sm font-extrabold shadow-sm border-2 border-blue-200">
+                    ⏳ 00:00
+                </span>
+            </div>
+
+            <div class="flex items-center justify-end gap-2 w-1/3">
+                <span id="warning-counter" class="bg-white text-red-600 px-2 py-1 rounded-md text-xs font-bold shadow-sm">
+                    ⚠️ 0/3
+                </span>
+                <button id="btn-selesai" onclick="finishExam()" class="bg-gray-900 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-xs md:text-sm font-bold hover:bg-gray-800 transition-all shadow-md">
+                    Selesai
+                </button>
+            </div>
+        </div>
+        
+        <!-- Iframe G-Form -->
+        <iframe id="exam-frame" class="flex-1 w-full h-full bg-gray-50" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox" frameborder="0" marginheight="0" marginwidth="0" allowfullscreen>Memuat...</iframe>
+    </div>
+
+    <!-- HALAMAN PELANGGARAN (DI BLOKIR) -->
+    <div id="violation-page" class="hidden min-h-screen flex flex-col items-center justify-center bg-red-50 p-6 text-center">
+        <svg class="w-24 h-24 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <h1 class="text-4xl font-extrabold text-red-600 mb-2">UJIAN DIBLOKIR!</h1>
+        <p class="text-lg text-gray-700 mb-6 max-w-md">Anda terdeteksi melakukan kecurangan karena keluar dari layar ujian.</p>
+        <p class="text-sm text-gray-500 font-medium bg-white px-4 py-2 rounded shadow">Silakan lapor kepada pengawas / guru Anda.</p>
+    </div>
+
+    <!-- SCRIPT LOGIKA ANTI-CHEAT, TOKEN & TIMER -->
+    <script>
+        // =====================================================================
+        // PENGATURAN UTAMA APLIKASI
+        // =====================================================================
+        
+        const LINK_GOOGLE_FORM = "https://docs.google.com/forms/d/e/1FAIpQLScdOd4s1A47VsKkMON_Oam_4P6lBaHeKAKrRQESlCT_Ek9-mQ/viewform?usp=sharing&ouid=113755804679584133958";
+        const TOKEN_UJIAN = "TIK2026"; // Ganti dengan Token yang Anda inginkan
+        const DURASI_UJIAN_MENIT = 60; // Ganti dengan waktu ujian dalam menit
+        
+        // =====================================================================
+
+        let warnings = 0;
+        const maxWarnings = 3;
+        let isExamActive = false;
+        let timerInterval;
+
+        // FUNGSI MEMULAI UJIAN
+        function startExam() {
+            // 1. Cek Link Form
+            if (!LINK_GOOGLE_FORM.includes("docs.google.com/forms")) {
+                alert('Sistem Error: Link Google Form belum disetel oleh Guru.');
+                return;
+            }
+
+            // 2. Cek Token
+            const inputToken = document.getElementById('exam-token').value.trim().toUpperCase();
+            if (inputToken !== TOKEN_UJIAN.toUpperCase()) {
+                alert('❌ TOKEN SALAH!\nSilakan periksa kembali atau tanya pengawas.');
+                return;
+            }
+
+            // 3. Masuk Fullscreen
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) elem.requestFullscreen().catch(err => console.log(err));
+
+            // 4. Tampilkan Halaman Ujian
+            document.getElementById('setup-page').classList.add('hidden');
+            document.getElementById('exam-page').classList.remove('hidden');
+            document.getElementById('exam-page').classList.add('flex');
+            document.getElementById('exam-frame').src = LINK_GOOGLE_FORM;
+            
+            isExamActive = true;
+            
+            // 5. Jalankan Waktu
+            startTimer(DURASI_UJIAN_MENIT);
+
+            // Mencegah Tombol Back HP
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = function () {
+                window.history.pushState(null, null, window.location.href);
+                if(isExamActive) alert("Dilarang menggunakan tombol kembali (Back) selama ujian!");
+            };
+        }
+
+        // FUNGSI WAKTU MUNDUR (TIMER)
+        function startTimer(minutes) {
+            let timeRemaining = minutes * 60;
+            const timerDisplay = document.getElementById('timer-display');
+            
+            timerInterval = setInterval(() => {
+                const m = Math.floor(timeRemaining / 60).toString().padStart(2, '0');
+                const s = (timeRemaining % 60).toString().padStart(2, '0');
+                timerDisplay.innerText = `⏳ ${m}:${s}`;
+                
+                // Jika waktu tersisa 5 menit
+                if (timeRemaining === 300) {
+                    timerDisplay.classList.replace('text-blue-700', 'text-red-600');
+                    timerDisplay.classList.replace('border-blue-200', 'border-red-400');
+                    alert("⚠️ PERHATIAN!\nWaktu ujian tersisa 5 MENIT lagi. Segera pastikan Anda sudah menekan tombol KIRIM/SUBMIT.");
+                }
+
+                // Jika waktu habis
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeUp();
+                }
+                
+                timeRemaining--;
+            }, 1000);
+        }
+
+        // FUNGSI KETIKA WAKTU HABIS
+        function handleTimeUp() {
+            isExamActive = false;
+            document.getElementById('exam-frame').classList.add('hidden');
+            
+            const timeoutDiv = document.createElement('div');
+            timeoutDiv.className = "flex-1 w-full h-full bg-orange-50 flex flex-col items-center justify-center p-6 text-center";
+            timeoutDiv.innerHTML = `
+                <svg class="w-24 h-24 text-orange-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h2 class="text-4xl font-extrabold text-orange-600 mb-2">WAKTU HABIS!</h2>
+                <p class="text-gray-700 mb-4 font-medium">Sesi ujian Anda telah ditutup secara otomatis.</p>
+            `;
+            document.getElementById('exam-page').insertBefore(timeoutDiv, document.getElementById('exam-frame'));
+
+            document.getElementById('header-title').innerText = "Ujian Ditutup (Waktu Habis)";
+            document.getElementById('header-subtitle').innerText = "Silakan tutup aplikasi";
+            document.getElementById('header-bar').classList.replace('bg-red-600', 'bg-orange-600');
+            document.getElementById('warning-counter').classList.add('hidden');
+            document.getElementById('timer-display').classList.add('hidden');
+            
+            const btn = document.getElementById('btn-selesai');
+            btn.innerText = "Tutup Aplikasi";
+            btn.classList.replace('bg-gray-900', 'bg-orange-800');
+        }
+
+        // FUNGSI UNTUK MENGUNCI UJIAN (Berhasil Selesai Secara Manual)
+        function setExamFinished() {
+            isExamActive = false;
+            clearInterval(timerInterval); // Hentikan Timer
+            
+            document.getElementById('exam-frame').classList.add('hidden'); 
+            
+            const successDiv = document.createElement('div');
+            successDiv.className = "flex-1 w-full h-full bg-green-50 flex flex-col items-center justify-center p-6 text-center";
+            successDiv.innerHTML = `
+                <svg class="w-20 h-20 text-green-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <h2 class="text-3xl font-extrabold text-green-600 mb-2">Ujian Telah Diselesaikan</h2>
+                <p class="text-gray-600 mb-4">Sensor Anti-Curang telah dinonaktifkan.</p>
+                <p class="text-sm text-gray-500 bg-white p-4 rounded-lg shadow border border-green-200">Jika tab Lihat Skor terbuka, silakan cek skor Anda di sana.<br>Jika sudah puas, kembali ke sini dan klik tombol <b>Tutup Aplikasi</b>.</p>
+            `;
+            document.getElementById('exam-page').insertBefore(successDiv, document.getElementById('exam-frame'));
+
+            document.getElementById('header-title').innerText = "Ujian Selesai (Aman)";
+            document.getElementById('header-subtitle').innerText = "Silakan cek skor Anda";
+            document.getElementById('header-bar').classList.replace('bg-red-600', 'bg-green-600');
+            document.getElementById('warning-counter').classList.add('hidden');
+            document.getElementById('timer-display').classList.add('hidden');
+            
+            const btn = document.getElementById('btn-selesai');
+            btn.innerText = "Tutup Aplikasi";
+            btn.classList.replace('bg-gray-900', 'bg-red-700');
+        }
+
+        // FUNGSI TOMBOL SELESAI
+        function finishExam() {
+            if (isExamActive) {
+                if(confirm("Apakah Anda sudah klik 'KIRIM / SUBMIT' dan yakin ingin mengakhiri ujian?\n(Lembar soal akan ditutup permanen)")) {
+                    setExamFinished();
+                    alert("Aman! Sensor dimatikan.\nJika tombol 'Lihat Skor' masih ada di layar Anda, silakan ditekan.");
+                }
+            } else {
+                if(confirm("Apakah Anda yakin ingin keluar sepenuhnya dari portal ujian?")) {
+                    if (document.exitFullscreen) document.exitFullscreen().catch(err => console.log(err));
+                    window.location.reload();
+                }
+            }
+        }
+
+        // ANTI CHEAT: INTEROGASI PINDAH TAB
+        document.addEventListener("visibilitychange", () => {
+            if (isExamActive && !document.hidden) {
+                setTimeout(() => {
+                    let isLookingScore = confirm("⚠️ SISTEM ANTI-CURANG ⚠️\n\nAnda terdeteksi keluar dari layar ujian.\n\nApakah Anda baru saja menekan tombol 'LIHAT SKOR'?\n\n👉 Klik [OK] jika YA (Ujian akan diselesaikan)\n👉 Klik [CANCEL] jika TIDAK");
+                    
+                    if (isLookingScore) {
+                        setExamFinished();
+                    } else {
+                        warnings++;
+                        document.getElementById('warning-counter').innerText = `⚠️ ${warnings}/${maxWarnings}`;
+                        
+                        if (warnings >= maxWarnings) {
+                            isExamActive = false;
+                            clearInterval(timerInterval); // Hentikan Waktu
+                            document.getElementById('exam-page').classList.add('hidden');
+                            document.getElementById('exam-page').classList.remove('flex');
+                            document.getElementById('violation-page').classList.remove('hidden');
+                            document.getElementById('violation-page').classList.add('flex');
+                            if (document.exitFullscreen) document.exitFullscreen().catch(err=>console.log(err));
+                        } else {
+                            alert(`PERINGATAN KECURANGAN!\nIni peringatan ${warnings} dari ${maxWarnings}.\n\nJika mencapai batas, ujian Anda diblokir otomatis.`);
+                        }
+                    }
+                }, 300);
+            }
+        });
+
+        // DISABLE SYSTEM (Klik Kanan & Shortcut)
+        document.addEventListener('contextmenu', e => { if(isExamActive) e.preventDefault(); });
+        document.addEventListener('keydown', e => {
+            if (isExamActive && (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === "I") || (e.ctrlKey && e.key === "u") || (e.ctrlKey && e.key === "c"))) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('beforeunload', e => {
+            if (isExamActive) { e.preventDefault(); e.returnValue = ''; }
+        });
+    </script>
+</body>
+</html>
